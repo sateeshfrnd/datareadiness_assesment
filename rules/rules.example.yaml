@@ -1,0 +1,125 @@
+# =============================================================================
+# Example DRA rules file - worked example for POC/customers.csv
+# =============================================================================
+# This file is the ONLY dataset-specific thing. The engine (dra_engine.py) is
+# generic; it just executes what you declare here. Copy and edit for any dataset.
+#
+# Structure:
+#   dataset:         metadata (target/problem_type enable signal/leakage/baseline)
+#   dataset_checks:  checks that run on the whole dataset (not a single column)
+#   columns:         per-column list of checks
+#
+# Each check:
+#   type:        one of the registered check types (see list at bottom)
+#   params:      (optional) extra inputs, e.g. {with: [colA]} or {min: 0, max: 100}
+#   thresholds:  rules that turn the metric into a severity. Two shapes:
+#                - flat list  (single-metric checks):
+#                    thresholds: [{op: gt, value: 20, severity: failure}]
+#                - dict keyed by metric name (multi-metric checks like structure):
+#                    thresholds: {row_count: [{op: lt, value: 1, severity: hard_stop}]}
+#   operators:   gt gte lt lte eq ne between([lo,hi])
+#   severities:  information | warning | failure | hard_stop
+#                (hard_stop blocks progression -> forces NO-GO)
+# =============================================================================
+
+dataset:
+  target: purchase_intent
+  problem_type: classification      # classification | regression
+  time_column: signup_date          # enables temporal drift split when no reference
+  reference_data: null              # or a path; overridden by --reference on the CLI
+
+dataset_checks:
+  - type: structure
+    thresholds:
+      row_count: [{op: lt, value: 1, severity: hard_stop}]
+      duplicate_column_count: [{op: gt, value: 0, severity: failure}]
+      empty_column_count: [{op: gt, value: 0, severity: failure}]
+
+  - type: sample_size
+    thresholds:
+      usable_rows: [{op: lt, value: 100, severity: hard_stop}]
+      rows_per_feature: [{op: lt, value: 10, severity: warning}]
+      minority_class_count: [{op: lt, value: 50, severity: warning}]
+
+  - type: evaluation_readiness      # informational strategy recommendation
+  - type: baseline                  # benchmark model (ROC-AUC); informational
+
+columns:
+
+  purchase_intent:                  # the target
+    - type: class_balance
+      thresholds:
+        minority_class_pct:
+          - {op: lt, value: 5,  severity: failure}
+          - {op: lt, value: 20, severity: warning}
+
+  customer_id:
+    - type: unique_ratio            # ID-like detection -> excluded from baseline
+      thresholds: [{op: gte, value: 0.99, severity: failure}]
+
+  account_status:
+    - type: distinct_count          # constant column
+      thresholds: [{op: lte, value: 1, severity: failure}]
+
+  country:
+    - type: top_value_pct           # near-constant / dominant category
+      thresholds:
+        - {op: gte, value: 99, severity: failure}
+        - {op: gte, value: 90, severity: warning}
+    - type: allowed_values
+      params: {values: ["US", "CA", "GB", "SG", "AU"]}
+      thresholds: [{op: gt, value: 0, severity: warning}]   # % invalid
+
+  age:
+    - type: missingness
+      thresholds:
+        - {op: gt, value: 20, severity: failure}
+        - {op: gt, value: 10, severity: warning}
+    - type: range_check
+      params: {min: 18, max: 100}
+      thresholds: [{op: gt, value: 0, severity: warning}]   # % out of range
+    - type: outlier_pct
+      thresholds: [{op: gt, value: 5, severity: warning}]
+
+  annual_income:
+    - type: missingness
+      thresholds:
+        - {op: gt, value: 20, severity: failure}
+        - {op: gt, value: 10, severity: warning}
+    - type: redundancy
+      params: {with: [income_bracket]}
+      thresholds:
+        - {op: gte, value: 0.95, severity: failure}
+        - {op: gte, value: 0.80, severity: warning}
+    - type: vif
+      params: {with: [income_bracket, sessions_last_30d]}
+      thresholds:
+        - {op: gte, value: 10, severity: failure}
+        - {op: gte, value: 5,  severity: warning}
+    - type: drift_psi               # uses temporal split on signup_date
+      thresholds:
+        - {op: gte, value: 0.3, severity: failure}
+        - {op: gte, value: 0.2, severity: warning}
+
+  sessions_last_30d:
+    - type: signal                  # association with target
+      thresholds: [{op: lt, value: 0.02, severity: warning}]   # weak signal
+    - type: numeric_stats           # informational (no thresholds)
+
+  random_tag:
+    - type: signal
+      thresholds: [{op: lt, value: 0.02, severity: warning}]
+
+  purchase_amount:
+    - type: leakage_auc             # single-feature AUC -> leakage hard stop
+      thresholds:
+        - {op: gte, value: 0.98, severity: hard_stop}
+        - {op: gte, value: 0.90, severity: warning}
+
+# -----------------------------------------------------------------------------
+# Registered check types:
+#   Column:  missingness, distinct_count, unique_ratio, top_value_pct,
+#            numeric_stats, outlier_pct, range_check, allowed_values,
+#            class_balance, signal, redundancy, vif, leakage_auc, drift_psi
+#   Dataset: structure, sample_size, baseline, evaluation_readiness
+# -----------------------------------------------------------------------------

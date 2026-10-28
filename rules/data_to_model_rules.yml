@@ -1,0 +1,30 @@
+# =============================================================================
+# DRA rules for data_to_model.csv  (soap/detergent formulation -> performance)
+# =============================================================================
+# This file is the ONLY dataset-specific thing. The DRA engine just executes
+#  what you declare here. Copy and edit for any dataset.
+#
+# Structure:
+#   dataset:         metadata about the data as a whole (target/problem_type enable signal/leakage/baseline)
+#   dataset_checks:  checks that run on the whole dataset, not a single column (row counts, sample size, the baseline model)
+#   columns:         per-column list of checks. under each column name you list the checks to run 
+#
+# Each check:
+#   type:        one of the registered check types (see list at bottom)
+#   params:      (optional) extra inputs, e.g. {with: [colA]} or {min: 0, max: 100}
+#   thresholds:  rules that turn the metric into a severity. Two shapes:
+#                - flat list  (single-metric checks):
+#                    thresholds: [{op: gt, value: 20, severity: failure}]
+#                - dict keyed by metric name (multi-metric checks like structure):
+#                    thresholds: {row_count: [{op: lt, value: 1, severity: hard_stop}]}
+#   operators:   gt gte lt lte eq ne between([lo,hi])
+#   severities:  information | warning | failure | hard_stop
+#                (hard_stop blocks progression -> forces NO-GO)
+#
+# Registered check types:
+#   Column:  missingness, distinct_count, unique_ratio, top_value_pct,
+#            numeric_stats, outlier_pct, range_check, allowed_values,
+#            class_balance, signal, redundancy, vif, leakage_auc, drift_psi
+#   Dataset: structure, sample_size, baseline, evaluation_readiness
+
+# =============================================================================

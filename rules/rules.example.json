@@ -1,0 +1,125 @@
+{
+  "_comment": "JSON equivalent of rules.example.yaml (use this when pyyaml is unavailable). See the YAML file for inline documentation of every check and threshold.",
+  "dataset": {
+    "target": "purchase_intent",
+    "problem_type": "classification",
+    "time_column": "signup_date",
+    "reference_data": null
+  },
+  "dataset_checks": [
+    {
+      "type": "structure",
+      "thresholds": {
+        "row_count": [{"op": "lt", "value": 1, "severity": "hard_stop"}],
+        "duplicate_column_count": [{"op": "gt", "value": 0, "severity": "failure"}],
+        "empty_column_count": [{"op": "gt", "value": 0, "severity": "failure"}]
+      }
+    },
+    {
+      "type": "sample_size",
+      "thresholds": {
+        "usable_rows": [{"op": "lt", "value": 100, "severity": "hard_stop"}],
+        "rows_per_feature": [{"op": "lt", "value": 10, "severity": "warning"}],
+        "minority_class_count": [{"op": "lt", "value": 50, "severity": "warning"}]
+      }
+    },
+    {"type": "evaluation_readiness"},
+    {"type": "baseline"}
+  ],
+  "columns": {
+    "purchase_intent": [
+      {
+        "type": "class_balance",
+        "thresholds": {
+          "minority_class_pct": [
+            {"op": "lt", "value": 5, "severity": "failure"},
+            {"op": "lt", "value": 20, "severity": "warning"}
+          ]
+        }
+      }
+    ],
+    "customer_id": [
+      {"type": "unique_ratio", "thresholds": [{"op": "gte", "value": 0.99, "severity": "failure"}]}
+    ],
+    "account_status": [
+      {"type": "distinct_count", "thresholds": [{"op": "lte", "value": 1, "severity": "failure"}]}
+    ],
+    "country": [
+      {
+        "type": "top_value_pct",
+        "thresholds": [
+          {"op": "gte", "value": 99, "severity": "failure"},
+          {"op": "gte", "value": 90, "severity": "warning"}
+        ]
+      },
+      {
+        "type": "allowed_values",
+        "params": {"values": ["US", "CA", "GB", "SG", "AU"]},
+        "thresholds": [{"op": "gt", "value": 0, "severity": "warning"}]
+      }
+    ],
+    "age": [
+      {
+        "type": "missingness",
+        "thresholds": [
+          {"op": "gt", "value": 20, "severity": "failure"},
+          {"op": "gt", "value": 10, "severity": "warning"}
+        ]
+      },
+      {
+        "type": "range_check",
+        "params": {"min": 18, "max": 100},
+        "thresholds": [{"op": "gt", "value": 0, "severity": "warning"}]
+      },
+      {"type": "outlier_pct", "thresholds": [{"op": "gt", "value": 5, "severity": "warning"}]}
+    ],
+    "annual_income": [
+      {
+        "type": "missingness",
+        "thresholds": [
+          {"op": "gt", "value": 20, "severity": "failure"},
+          {"op": "gt", "value": 10, "severity": "warning"}
+        ]
+      },
+      {
+        "type": "redundancy",
+        "params": {"with": ["income_bracket"]},
+        "thresholds": [
+          {"op": "gte", "value": 0.95, "severity": "failure"},
+          {"op": "gte", "value": 0.80, "severity": "warning"}
+        ]
+      },
+      {
+        "type": "vif",
+        "params": {"with": ["income_bracket", "sessions_last_30d"]},
+        "thresholds": [
+          {"op": "gte", "value": 10, "severity": "failure"},
+          {"op": "gte", "value": 5, "severity": "warning"}
+        ]
+      },
+      {
+        "type": "drift_psi",
+        "thresholds": [
+          {"op": "gte", "value": 0.3, "severity": "failure"},
+          {"op": "gte", "value": 0.2, "severity": "warning"}
+        ]
+      }
+    ],
+    "sessions_last_30d": [
+      {"type": "signal", "thresholds": [{"op": "lt", "value": 0.02, "severity": "warning"}]},
+      {"type": "numeric_stats"}
+    ],
+    "random_tag": [
+      {"type": "signal", "thresholds": [{"op": "lt", "value": 0.02, "severity": "warning"}]}
+    ],
+    "purchase_amount": [
+      {
+        "type": "leakage_auc",
+        "thresholds": [
+          {"op": "gte", "value": 0.98, "severity": "hard_stop"},
+          {"op": "gte", "value": 0.90, "severity": "warning"}
+        ]
+      }
+    ]
+  }
+}
