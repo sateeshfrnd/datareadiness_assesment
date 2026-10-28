@@ -1,0 +1,84 @@
+
+data_profiling:
+  thresholds:
+    missing_threshold: 10
+    near_constant_threshold: 95
+    hard_stop_threshold: 50
+
+  schema:
+    _c0: string
+    UID: string
+    RootRecipeCode: string
+    Electrolyte: double
+    Fats and oils: double
+    Fatty acid: double
+    Filler: double
+    Free alkali: double
+    Free fatty acid: double
+    Humectant: double
+    Minor: double
+    Perfume: double
+    Polymer: double
+    Soap noodles: double
+    Structurant: double
+    Surfactant: double
+    Water: double
+    Electrolytes: double
+    FattyMatter: double
+    Other Filler: double
+    Starch: double
+    Talc: double
+    Mean_Iodine_value: double
+    C8: double
+    C10: double
+    C12: double
+    C14: double
+    C16: double
+    C18: double
+    C18_1: double
+    C18_2: double
+    C18_3: double
+    C20: double
+    other: double
+    ShortChainSat: double
+    LongChain: double
+    LongChainUnsat: double
+    LongChainSat: double
+    RatioC12C14: double
+    AveragedAbsorbedWater: double
+    BarHardnessDuringUse: integer
+    BarSmoothDryFeel: integer
+    BarStickinessBeforeUse: integer
+    BubbleSize: integer
+    ColourOfFoam: integer
+    Grittiness25C: integer
+    Grittiness40C: integer
+    LatherConsistency: integer
+    LatherQuantity: integer
+    LatherSpeedGeneration: integer
+    MilkyLather: double
+    AverageLossOfMass: double
+    AverageMushAmount: double
+    MushCurdledaspect: integer
+    MushDryaspect: integer
+    MushHardnessFeel: integer
+    MushJellyAspect: integer
+    MushPastyaspect: integer
+    MushQuantityFeeling: integer
+    MushQuantityVisual: integer
+    MushSlimyViscousAspect: integer
+    MushStickiness: integer
+    ResidueonSoapDish: integer
+    Sandiness25C: integer
+    Sandiness40C: integer
+    Slipperiness25C: integer
+    Slipperiness40C: integer
+    SwollenBar: integer
+    WhitePatches: integer
+    WhiteSlurryorDyeonSoapDish: double
+    AverageWearRate: double
+    Rinse: double
+    LatherVolume: double
+    Total_Cracking_Score: integer
+    Total_Cracking_Score_days: integer
+    RateofWearMean: double
