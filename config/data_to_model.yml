@@ -1,0 +1,60 @@
+# =============================================================================
+# SPARK_DRA dataset configuration - data_to_model.csv (soap formulation)
+# =============================================================================
+# This is the ONLY dataset-specific file. demo_assessment.py loads it, runs the
+# generic Spark checks in spark_dra.py, and scores the metrics against the
+# thresholds below. Copy & edit this file for any new dataset - no code changes.
+#
+# thresholds entry:
+#   check     DR-01 .. DR-12 (which check the metric comes from)
+#   metric    metric FAMILY (the part before ':'); one rule covers every
+#             per-column metric, e.g. missing_pct applies to missing_pct:<any col>
+#   op        gt | gte | lt | lte | eq | ne | between
+#   value     a number (or [lo, hi] for 'between')
+#   severity  information | warning | failure | hard_stop  (hard_stop -> NO-GO)
+#   blocks    optional bool (defaults true for hard_stop)
+# =============================================================================
+
+dataset:
+  data_path: /Workspace/Users/sateeshfrnd@gmail.com/SAMBA/datareadiness_assesment/sample_datasets/data_to_model.csv          # relative to this config file
+  target: RateofWearMean
+  problem_type: regression              # regression | classification
+  id_columns: [_c0, UID, RootRecipeCode]   # _c0 = the unnamed pandas index column
+  redundancy_pairs:
+    - [Electrolyte, Electrolytes]
+    - [Fatty acid, FattyMatter]
+    - [LongChain, LongChainSat]
+    - [LongChain, LongChainUnsat]
+  output_dir: dra_output
+
+thresholds:
+  # DR-02 Target viability
+  - {check: DR-02, metric: missing_pct, op: gt, value: 30, severity: failure}
+  - {check: DR-02, metric: missing_pct, op: gt, value: 5,  severity: warning}
+  - {check: DR-02, metric: target_stddev, op: lte, value: 0, severity: failure}
+
+  # DR-03 Predictor quality
+  - {check: DR-03, metric: unique_ratio,  op: gte, value: 0.99, severity: failure}   # ID-like
+  - {check: DR-03, metric: distinct_count, op: lte, value: 1,  severity: failure}    # constant
+
+  # DR-04 Missingness
+  - {check: DR-04, metric: missing_pct, op: gt, value: 20, severity: failure}
+  - {check: DR-04, metric: missing_pct, op: gt, value: 10, severity: warning}
+
+  # DR-05 Sample size
+  - {check: DR-05, metric: usable_rows, op: lt, value: 50, severity: hard_stop}
+  - {check: DR-05, metric: rows_per_feature, op: lt, value: 5, severity: warning}
+
+  # DR-06 Signal screening
+  - {check: DR-06, metric: weak_signal_feature_pct, op: gt, value: 70, severity: warning}
+
+  # DR-07 Redundancy / multicollinearity
+  - {check: DR-07, metric: abs_correlation, op: gte, value: 0.95, severity: failure}
+  - {check: DR-07, metric: abs_correlation, op: gte, value: 0.80, severity: warning}
+
+  # DR-08 Leakage
+  - {check: DR-08, metric: max_single_feature_corr, op: gte, value: 0.98, severity: hard_stop}
+  - {check: DR-08, metric: max_single_feature_corr, op: gte, value: 0.90, severity: warning}
+
+  # DR-11 Baseline model
+  - {check: DR-11, metric: baseline_r2, op: lt, value: 0, severity: warning}
